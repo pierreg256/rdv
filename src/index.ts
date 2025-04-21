@@ -99,6 +99,7 @@ process.on("SIGINT", async () => {
   await selfRegisterService.stop();
   console.log("Service d'auto-enregistrement arrêté");
 
+  server.closeAllConnections();
   server.close(() => {
     console.log("Serveur HTTP arrêté");
     process.exit(0);

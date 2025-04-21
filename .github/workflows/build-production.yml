@@ -43,6 +43,8 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: production-build
+          include-hidden-files: true
+          retention-days: 1
           path: |
             dist/
             node_modules/

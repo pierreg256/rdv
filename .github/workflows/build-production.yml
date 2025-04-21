@@ -44,5 +44,9 @@ jobs:
         with:
           name: production-build
           path: |
-            ./
+            dist/
+            node_modules/
+            package.json
+            package-lock.json
+            .env
             !dist/**/*.map

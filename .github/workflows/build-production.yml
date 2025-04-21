@@ -44,5 +44,5 @@ jobs:
         with:
           name: production-build
           path: |
-            dist/
+            ./
             !dist/**/*.map

@@ -13,21 +13,59 @@ import selfRegisterService from "./services/selfRegister.service";
 // Initialisation de l'application Express
 const app = express();
 
+// Configuration CORS améliorée
+const corsOptions = {
+  origin: [
+    "http://localhost:3001",
+    "http://localhost:3000",
+    "http://4.211.152.236:1",
+    "http://4.211.152.236",
+  ],
+  credentials: true,
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization", "Origin", "Accept"],
+  exposedHeaders: ["Content-Disposition"],
+};
+
 // Middlewares
+app.use(cors(corsOptions)); // Utilisation de la configuration CORS améliorée
+app.use(morgan("dev")); // Logging
+app.use(express.json()); // Parser pour JSON
+
+// Utiliser helmet avec des options personnalisées pour éviter les erreurs CSP
 app.use(
   helmet({
     contentSecurityPolicy: {
       directives: {
-        ...helmet.contentSecurityPolicy.getDefaultDirectives(),
-        "script-src": ["'self'", "cdn.jsdelivr.net"],
-        "style-src": ["'self'", "cdn.jsdelivr.net", "'unsafe-inline'"],
+        defaultSrc: ["'self'"],
+        scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'", "cdn.jsdelivr.net"],
+        styleSrc: ["'self'", "'unsafe-inline'", "cdn.jsdelivr.net"],
+        connectSrc: ["'self'", "http://localhost:3000", "http://localhost:3001", "http://4.211.152.236:1", "http://4.211.152.236"],
+        imgSrc: ["'self'", "data:"],
+        fontSrc: ["'self'", "data:"],
       },
     },
+    // Désactiver ces en-têtes qui causent des problèmes
+    crossOriginEmbedderPolicy: false,
+    crossOriginOpenerPolicy: false,
+    crossOriginResourcePolicy: false,
   })
-); // Sécurité avec configuration pour les CDN
-app.use(cors()); // Gestion des CORS
-app.use(morgan("dev")); // Logging
-app.use(express.json()); // Parser pour JSON
+);
+
+// Middleware pour ajouter les en-têtes manuellement
+app.use((req, res, next) => {
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader(
+    "Access-Control-Allow-Methods",
+    "GET, POST, PUT, DELETE, OPTIONS"
+  );
+  res.setHeader(
+    "Access-Control-Allow-Headers",
+    "Origin, X-Requested-With, Content-Type, Accept, Authorization"
+  );
+  res.setHeader("Access-Control-Allow-Credentials", "true");
+  next();
+});
 
 // Routes API
 app.use("/api/services", serviceRoutes);

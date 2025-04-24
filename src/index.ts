@@ -13,13 +13,15 @@ import selfRegisterService from "./services/selfRegister.service";
 // Initialisation de l'application Express
 const app = express();
 
-// Configuration CORS améliorée
+// Configuration CORS améliorée - avec support pour le domaine Azure en production
 const corsOptions = {
   origin: [
     "http://localhost:3001",
     "http://localhost:3000",
     "http://4.211.152.236:1",
     "http://4.211.152.236",
+    "https://ring-dashboard.franc.oudapp.azure.com", // Domaine Azure de production
+    "https://ring-dashboard.francecentral.cloudapp.azure.com", // Domaine Azure alternatif
   ],
   credentials: true,
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
@@ -38,9 +40,21 @@ app.use(
     contentSecurityPolicy: {
       directives: {
         defaultSrc: ["'self'"],
-        scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'", "cdn.jsdelivr.net"],
+        scriptSrc: [
+          "'self'",
+          "'unsafe-inline'",
+          "'unsafe-eval'",
+          "cdn.jsdelivr.net",
+        ],
         styleSrc: ["'self'", "'unsafe-inline'", "cdn.jsdelivr.net"],
-        connectSrc: ["'self'", "http://localhost:3000", "http://localhost:3001", "http://4.211.152.236:1", "http://4.211.152.236"],
+        connectSrc: [
+          "'self'",
+          "http://localhost:3000",
+          "http://localhost:3001",
+          "http://4.211.152.236:1",
+          "http://4.211.152.236",
+          "https://ring-dashboard.francecentral.cloudapp.azure.com",
+        ],
         imgSrc: ["'self'", "data:"],
         fontSrc: ["'self'", "data:"],
       },
@@ -52,9 +66,17 @@ app.use(
   })
 );
 
-// Middleware pour ajouter les en-têtes manuellement
+// Middleware pour ajouter les en-têtes manuellement pour tous les domaines
 app.use((req, res, next) => {
-  res.setHeader("Access-Control-Allow-Origin", "*");
+  const origin = req.headers.origin;
+
+  // Autoriser tous les domaines de production et développement
+  if (origin) {
+    res.setHeader("Access-Control-Allow-Origin", origin);
+  } else {
+    res.setHeader("Access-Control-Allow-Origin", "*");
+  }
+
   res.setHeader(
     "Access-Control-Allow-Methods",
     "GET, POST, PUT, DELETE, OPTIONS"
@@ -64,6 +86,16 @@ app.use((req, res, next) => {
     "Origin, X-Requested-With, Content-Type, Accept, Authorization"
   );
   res.setHeader("Access-Control-Allow-Credentials", "true");
+
+  // Désactiver les politiques d'isolation d'origine qui causent les erreurs
+  res.setHeader("Cross-Origin-Opener-Policy", "same-origin-allow-popups");
+  res.setHeader("Cross-Origin-Resource-Policy", "cross-origin");
+  res.setHeader("Cross-Origin-Embedder-Policy", "credentialless");
+
+  if (req.method === "OPTIONS") {
+    return res.status(200).end();
+  }
+
   next();
 });
 

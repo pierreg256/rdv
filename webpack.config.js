@@ -2,6 +2,21 @@ const path = require("path");
 const { VueLoaderPlugin } = require("vue-loader");
 const CopyWebpackPlugin = require("copy-webpack-plugin");
 
+// Liste des composants FluentUI à traiter comme des éléments personnalisés
+const fluentComponents = [
+  "fluent-badge",
+  "fluent-button",
+  "fluent-card",
+  "fluent-tab",
+  "fluent-tabs",
+  "fluent-menu",
+  "fluent-menu-item",
+  "fluent-text-field",
+  "fluent-select",
+  "fluent-option",
+  "fluent-data-grid",
+];
+
 module.exports = {
   mode: process.env.NODE_ENV === "production" ? "production" : "development",
   entry: "./client/src/main.ts",
@@ -15,6 +30,11 @@ module.exports = {
       {
         test: /\.vue$/,
         loader: "vue-loader",
+        options: {
+          compilerOptions: {
+            isCustomElement: (tag) => fluentComponents.includes(tag),
+          },
+        },
       },
       {
         test: /\.ts$/,
